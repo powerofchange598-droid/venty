@@ -1,0 +1,133 @@
+/* --- Venty Professional Button System --- */
+
+.btn {
+  padding: 12px 24px;
+  border-radius: var(--radius-xl);
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  border: 2px solid transparent;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-secondary) !important;
+  border-color: var(--border-primary) !important;
+  transform: none;
+  box-shadow: none;
+}
+
+/* --- Primary Action Button (CTA) --- */
+.btn-primary {
+  color: var(--accent-text);
+  border: none;
+  padding: 14px 24px;
+  background-color: var(--brand-primary);
+  box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.btn-primary:not(:disabled):hover {
+  background-color: var(--brand-accent);
+  box-shadow: 0 6px 16px var(--shadow-color-deep), 0 0 20px rgba(var(--brand-primary-raw), 0.2);
+  transform: translateY(-2px);
+}
+
+.btn-primary:not(:disabled):active {
+  transform: translateY(0px) scale(0.98);
+  box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+/* --- Secondary / Outline Buttons --- */
+.btn-secondary, .btn-outline {
+  background-color: #E8EEF6; /* Off-blue background */
+  border-color: rgba(var(--brand-primary-raw), 0.2);
+  color: var(--brand-primary);
+  box-shadow: none;
+}
+.btn-secondary:not(:disabled):hover, 
+.btn-outline:not(:disabled):hover {
+  background-color: #dbe4f0; /* Darker off-blue */
+  border-color: rgba(var(--brand-primary-raw), 0.4);
+  color: var(--brand-primary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+
+/* Dark Mode Override for Secondary Button */
+html.dark .btn-secondary, 
+html.dark .btn-outline {
+  background-color: var(--bg-secondary);
+  border-color: var(--highlight);
+  color: var(--highlight);
+}
+html.dark .btn-secondary:not(:disabled):hover,
+html.dark .btn-outline:not(:disabled):hover {
+    background-color: rgba(var(--highlight-raw), 0.1);
+    border-color: var(--highlight);
+    color: var(--highlight);
+}
+
+
+/* --- Danger Button --- */
+.btn-danger {
+  background-color: transparent;
+  border-color: var(--feedback-error);
+  color: var(--feedback-error);
+  box-shadow: none;
+}
+.btn-danger:not(:disabled):hover {
+  background-color: rgba(var(--feedback-error-raw), 0.1);
+  border-color: var(--feedback-error);
+}
+
+/* --- Ghost / Subtle Button --- */
+.btn-ghost {
+  background-color: transparent;
+  color: var(--text-secondary);
+  box-shadow: none;
+  border-color: transparent;
+}
+.btn-ghost:not(:disabled):hover {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* --- Ripple Effect --- */
+.btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(var(--text-primary-raw), 0.2);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%, -50%);
+  transform-origin: 50% 50%;
+}
+html.dark .btn::after {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+
+.btn:not(:disabled):active::after {
+  animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+  0% { transform: scale(0, 0); opacity: 1; }
+  20% { transform: scale(25, 25); opacity: 1; }
+  100% { opacity: 0; transform: scale(40, 40); }
+}

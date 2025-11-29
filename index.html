@@ -1,0 +1,317 @@
+<script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.9.5",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "recharts": "https://aistudiocdn.com/recharts@^3.3.0",
+    "@heroicons/react/": "https://aistudiocdn.com/@heroicons/react@^2.2.0/",
+    "framer-motion": "https://aistudiocdn.com/framer-motion@^12.23.24",
+    "chart.js/": "https://aistudiocdn.com/chart.js@^4.4.3/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.29.0",
+    "react-i18next": "https://aistudiocdn.com/react-i18next@^16.2.4",
+    "i18next": "https://aistudiocdn.com/i18next@^25.6.1",
+    "i18next-http-backend": "https://aistudiocdn.com/i18next-http-backend@^2.5.2"
+  }
+}
+</script>
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/venty-logo.svg" />
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+    <title>Venty AI</title>
+    <link rel="manifest" href="/public/manifest.webmanifest">
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/public/sw.js').catch(err => {
+            console.error('[PWA] SW registration failed:', err);
+          });
+        });
+      }
+    </script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="/animations.css">
+    <link rel="stylesheet" href="/public/cursors/cursors.css">
+    <style>
+      /* --- Professional UI Design System V5 --- */
+      
+      /* --- 1. THEME DEFINITIONS & COLOR LOGIC --- */
+      :root {
+        /* Light Theme (Default) */
+        --surface-0-raw: 247 247 245;  /* #F7F7F5 (App Background) */
+        --surface-1-raw: 255 255 255;  /* #FFFFFF (Brighter Card) */
+        --border-color-raw: 0 0 0;
+        --shadow-color-raw: 0 0 0;
+        --text-primary-raw: 17 24 39;
+        --text-secondary-raw: 75 85 99;
+        --brand-primary-raw: 58 123 255;   /* #3A7BFF (Light Blue) */
+
+        /* Feedback Colors */
+        --feedback-error-raw: 220 38 38;
+        --feedback-error-bg-raw: 254 226 226;
+        --feedback-success-raw: 22 163 74;
+        --feedback-warning-raw: 245 158 11;
+      }
+
+      html.dark {
+        --surface-0-raw: 13 13 16;         /* #0D0D10 (Dark charcoal App Background) */
+        --surface-1-raw: 26 26 31;         /* #1A1A1F (Darker Card) */
+        --border-color-raw: 255 255 255;
+        --shadow-color-raw: 0 0 0;         /* Shadows remain black */
+        --text-primary-raw: 248 250 252;
+        --text-secondary-raw: 156 163 175;
+        --brand-primary-raw: 214 175 99;    /* #D6AF63 (Premium Gold) */
+      }
+      
+      html.trader {
+        --surface-0-raw: 13 13 16;
+        --surface-1-raw: 26 26 31; /* #1A1A1F */
+        --border-color-raw: 255 255 255;
+        --text-primary-raw: 248 250 252;
+        --text-secondary-raw: 156 163 175;
+        --brand-primary-raw: 229 57 53;     /* #E53935 (Vivid Red) */
+      }
+
+      /* Consumable CSS Variables */
+      :root {
+        --bg-primary: rgb(var(--surface-0-raw));
+        --bg-secondary: rgb(var(--surface-1-raw));
+        --bg-tertiary: rgba(var(--border-color-raw), 0.05);
+        --border-primary: rgba(var(--border-color-raw), 0.05);
+        --text-primary: rgb(var(--text-primary-raw));
+        --text-secondary: rgb(var(--text-secondary-raw));
+        --text-tertiary: rgba(var(--text-secondary-raw), 0.7);
+        --brand-primary: rgb(var(--brand-primary-raw));
+        --feedback-error: rgb(var(--feedback-error-raw));
+        --feedback-error-bg: rgb(var(--feedback-error-bg-raw));
+        --feedback-success: rgb(var(--feedback-success-raw));
+        --feedback-warning: rgb(var(--feedback-warning-raw));
+
+        --shadow-card: 0 4px 14px rgba(var(--shadow-color-raw), 0.08);
+        --shadow-card-hover: 0 8px 24px rgba(var(--shadow-color-raw), 0.1);
+        --shadow-button-cta: 0 4px 12px rgba(var(--brand-primary-raw), 0.15);
+        --shadow-button-cta-hover: 0 6px 16px rgba(var(--brand-primary-raw), 0.2);
+      }
+      
+      html.dark, html.trader {
+        --bg-tertiary: rgba(var(--border-color-raw), 0.1);
+        --border-primary: rgba(var(--border-color-raw), 0.1);
+        --shadow-card: 0 4px 8px rgba(var(--shadow-color-raw), 0.15), 0 10px 20px rgba(var(--shadow-color-raw), 0.2);
+        --shadow-card-hover: 0 6px 12px rgba(var(--shadow-color-raw), 0.2), 0 12px 25px rgba(var(--shadow-color-raw), 0.25);
+        --shadow-button-cta: 0 4px 14px rgba(var(--brand-primary-raw), 0.15);
+        --shadow-button-cta-hover: 0 6px 16px rgba(var(--brand-primary-raw), 0.25);
+      }
+
+      /* --- 2. GLOBAL STYLES & LAYOUT --- */
+      html, body, #root {
+        background-color: var(--bg-primary);
+        color: var(--text-secondary);
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      
+      /* --- 3. COMPONENT SYSTEM --- */
+      
+      /* Upgraded Card System */
+      .card {
+        background-color: var(--bg-secondary);
+        border-radius: 1rem; /* 16px */
+        padding: 1rem; /* 16px for mobile */
+        border: 1px solid var(--border-primary);
+        box-shadow: var(--shadow-card);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      @media (min-width: 768px) {
+        .card {
+          padding: 1.5rem; /* 24px for tablet+ */
+        }
+      }
+
+      .card.cursor-pointer:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-card-hover);
+      }
+      
+      html.trader .card.cursor-pointer:hover {
+        box-shadow: var(--shadow-card-hover), 0 0 15px rgba(var(--brand-primary-raw), 0.3);
+      }
+
+      .card-border-accent {
+        border-left: 4px solid var(--brand-primary);
+      }
+      
+      /* Upgraded Button System */
+      .btn {
+        border-radius: 12px;
+        font-weight: 600;
+        padding: 0.75rem 1rem; /* 12px 16px */
+        transition: all 0.23s cubic-bezier(0.25, 0.1, 0.25, 1);
+        cursor: pointer;
+        width: 100%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid transparent;
+      }
+
+      @media (min-width: 768px) {
+        .btn {
+          padding: 1rem 1.5rem; /* 16px 24px */
+        }
+      }
+
+      .btn:disabled {
+        cursor: not-allowed; opacity: 0.5;
+        transform: none !important; box-shadow: none !important;
+      }
+      
+      .btn-primary {
+        background-color: var(--brand-primary);
+        color: white;
+        border: none;
+        box-shadow: var(--shadow-button-cta);
+        font-weight: 700;
+      }
+      html[data-account-type="merchant"]:not(.dark) .btn-primary,
+      html.trader .btn-primary { 
+          color: white; 
+          background-color: rgb(var(--brand-primary-raw));
+      }
+      html.dark .btn-primary { color: #0D0D0E; } /* Dark text on gold button */
+      
+      .btn-primary:not(:disabled):hover { 
+        filter: brightness(1.1); 
+        transform: scale(1.05); 
+        box-shadow: var(--shadow-button-cta-hover);
+      }
+      .btn-primary:not(:disabled):active {
+        transform: scale(0.97);
+      }
+
+      .btn-secondary {
+        background-color: var(--bg-tertiary);
+        color: var(--text-primary);
+        border-color: transparent;
+      }
+      .btn-secondary:not(:disabled):hover { background-color: rgba(var(--border-color-raw), 0.1); }
+      
+      .btn-danger {
+        background-color: var(--feedback-error-bg);
+        color: var(--feedback-error);
+      }
+      .btn-danger:not(:disabled):hover { filter: brightness(0.95); }
+
+      /* --- Marketing Ad Package Card --- */
+      .ad-package-card {
+        background-color: #FFFFFF;
+        border-radius: 16px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid var(--border-primary);
+      }
+      .ad-package-card:hover {
+        transform: scale(1.02) translateY(-2px);
+        box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+      }
+      html.dark .ad-package-card, html.trader .ad-package-card {
+        background-color: var(--bg-secondary);
+      }
+
+
+      /* --- Navigation --- */
+      .bottom-nav-glass a.active { color: var(--brand-primary); }
+      .bottom-nav-glass a.active svg { filter: drop-shadow(0 0 4px rgba(var(--brand-primary-raw), 0.6)); }
+      .active .icon-glowable { color: var(--brand-primary); }
+
+      /* --- Inputs & Forms --- */
+      input, textarea, select {
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border-primary);
+        border-radius: 8px;
+        padding: 10px 12px;
+        color: var(--text-primary);
+        width: 100%;
+      }
+      input:focus, textarea:focus, select:focus { 
+        outline: none;
+        border-color: var(--brand-primary); 
+        box-shadow: 0 0 0 2px rgba(var(--brand-primary-raw), 0.2);
+      }
+      
+      /* Upgraded iOS Toggle Switch */
+      .ios-switch { width: 48px; height: 28px; }
+      .ios-switch .slider { border-radius: 28px; }
+      .ios-switch .slider:before { height: 24px; width: 24px; left: 2px; bottom: 2px; box-shadow: 0 2px 4px rgba(0,0,0,0.15); }
+      html.dark .ios-switch .slider:before { background-color: #E5E7EB; }
+      .ios-switch input:checked + .slider {
+        background-color: var(--brand-primary);
+        box-shadow: 0 0 8px rgba(var(--brand-primary-raw), 0.5);
+      }
+      .ios-switch input:checked + .slider:before { transform: translateX(20px); }
+      
+      /* Risk Slider */
+      .risk-slider { -webkit-appearance: none; width: 100%; height: 8px; background: var(--bg-tertiary); border-radius: 5px; outline: none; }
+      .risk-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; background: var(--brand-primary); cursor: pointer; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+      .risk-slider::-moz-range-thumb { width: 20px; height: 20px; background: var(--brand-primary); cursor: pointer; border-radius: 50%; border: none; }
+
+      /* --- New Store Setup Styles --- */
+      .store-setup-layout {
+        display: grid;
+        grid-template-columns: 1fr;
+        height: calc(100% - 65px); /* Full height minus header */
+      }
+      @media (min-width: 1024px) {
+        .store-setup-layout { grid-template-columns: minmax(350px, 450px) 1fr; }
+      }
+      .form-panel { overflow-y: auto; padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 1rem; }
+      .preview-panel { background-color: var(--bg-primary); padding: 1.5rem; display: none; flex-direction: column; }
+      @media (min-width: 1024px) { .preview-panel { display: flex; } }
+      .device-toggle { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem; }
+      .device-toggle button { padding: 0.5rem 1rem; border: none; background: var(--bg-tertiary); border-radius: 999px; font-weight: 600; color: var(--text-secondary); }
+      .device-toggle button.active { background: var(--brand-primary); color: white; }
+      .store-preview-frame { flex-grow: 1; border: 1px solid var(--border-primary); border-radius: 1rem; box-shadow: var(--shadow-card); transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1); }
+      .store-preview-frame.mobile { max-width: 375px; max-height: 812px; margin: auto; border-radius: 2rem; border-width: 8px; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+      .save-bar { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(var(--surface-1-raw), 0.8); backdrop-filter: blur(8px); padding: 1rem; border-top: 1px solid var(--border-primary); z-index: 50; }
+      @media (min-width: 1024px) { .save-bar { left: 240px; } }
+      .save-bar > .btn { max-width: 300px; margin: 0 auto; }
+
+
+      /* Other element adjustments */
+      .space-y-6 > :not([hidden]) ~ :not([hidden]) { margin-top: 24px; }
+    </style>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'bg-primary': 'var(--bg-primary)', 
+              'bg-secondary': 'var(--bg-secondary)',
+              'bg-tertiary': 'var(--bg-tertiary)',
+              'border-primary': 'var(--border-primary)',
+              'text-primary': 'var(--text-primary)', 
+              'text-secondary': 'var(--text-secondary)',
+              'text-tertiary': 'var(--text-tertiary)',
+              'brand-primary': 'var(--brand-primary)',
+              'brand-accent': 'var(--brand-accent)',
+              'feedback-error': 'var(--feedback-error)',
+              'feedback-error-bg': 'var(--feedback-error-bg)',
+              'feedback-success': 'var(--feedback-success)',
+              'feedback-warning': 'var(--feedback-warning)',
+            },
+          },
+        },
+      };
+    </script>
+  <link rel="stylesheet" href="/index.css">
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
