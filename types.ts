@@ -1,3 +1,4 @@
+
 // --- General App Types ---
 
 export interface MerchantProfile {
@@ -55,6 +56,7 @@ export interface User {
     currency: string;
     langCode: string;
     countryCode: string;
+    referralCode?: string;
 }
 
 export interface Goal {
@@ -474,6 +476,7 @@ export interface PaymentGateway {
     logoUrl: string;
     description: string;
     isLocal: boolean;
+    comingSoon?: boolean;
 }
 
 export interface UserPaymentMethod {
@@ -573,4 +576,34 @@ export interface Stock {
   change: number;
   changePercent: number;
   sparkline: { value: number }[];
+}
+
+// --- Referral & Support Types ---
+export interface Referral {
+    id: string;
+    refereeName: string;
+    date: string;
+    status: 'Pending' | 'Completed';
+    rewardAmount: number;
+}
+
+export interface SupportTicket {
+    id: string;
+    userId: string;
+    userName: string;
+    userEmail: string;
+    subject: string;
+    category: string;
+    message: string;
+    status: 'Open' | 'In Progress' | 'Resolved';
+    createdAt: string;
+    lastUpdate: string;
+    adminResponse?: string;
+}
+
+export interface FAQItem {
+    id: string;
+    question: string;
+    answer: string;
+    category: string;
 }

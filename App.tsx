@@ -3,6 +3,7 @@ import React, { useState, useEffect, Suspense, lazy, useCallback } from 'react';
 import { HashRouter, Routes, Route, Outlet, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ThemeProvider } from './hooks/useTheme';
+import { AuthProvider } from './hooks/useAuth';
 import { PerformanceProvider } from './hooks/usePerformance';
 import { ToastProvider, useToast } from './hooks/useToast';
 import { CartProvider } from './hooks/useCart';
@@ -11,7 +12,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { LocalizationProvider } from './hooks/useLocalization';
 
 // --- Data ---
-import { User, BudgetCategory, Goal, MerchantAd, PurchaseRequest, FixedExpense, Order, StoreConfig, Product, AdType, AdPlanId } from './types';
+import { User, BudgetCategory, Goal, MerchantAd, PurchaseRequest, FixedExpense, Order, StoreConfig, Product, AdType, AdPlanId, Transaction } from './types';
 import { mockUser, mockMerchantUser, mockBudget, mockFamily, mockAds, mockPurchaseRequests, mockOrders, mockTransactions } from './data/mockData';
 import { generateInitialBudget } from './utils/budgetGenerator';
 
@@ -26,9 +27,10 @@ import { MerchantLayout } from './components/merchant/MerchantLayout';
 
 // --- Screen Components (Lazy Loaded) ---
 const OnboardingScreen = lazy(() => import('./screens/OnboardingScreen'));
-const DashboardScreen = lazy(() => import('./screens/DashboardScreen'));
+import DashboardScreen from './screens/DashboardScreen';
 const BudgetScreen = lazy(() => import('./screens/BudgetScreen'));
 const GoalsScreen = lazy(() => import('./screens/GoalsScreen'));
+const InvestmentScreen = lazy(() => import('./screens/InvestmentScreen'));
 const FinancialSnapshotScreen = lazy(() => import('./screens/FinancialSnapshotScreen'));
 const MarketplaceScreen = lazy(() => import('./screens/MarketplaceScreen'));
 const ProductDetailScreen = lazy(() => import('./screens/ProductDetailScreen'));
@@ -40,6 +42,9 @@ const OnboardingAISetupScreen = lazy(() => import('./screens/OnboardingAISetupSc
 const FamilyChatScreen = lazy(() => import('./screens/FamilyChatScreen'));
 const FamilyRequestsScreen = lazy(() => import('./screens/FamilyRequestsScreen'));
 const PurchaseRequestScreen = lazy(() => import('./screens/PurchaseRequestScreen'));
+const ReferralScreen = lazy(() => import('./screens/ReferralScreen'));
+const SupportScreen = lazy(() => import('./screens/SupportScreen'));
+
 // Merchant Screens
 const MerchantDashboardScreen = lazy(() => import('./screens/merchant/MerchantDashboardScreen'));
 const MerchantOnboardingScreen = lazy(() => import('./screens/merchant/MerchantOnboardingScreen'));
@@ -79,10 +84,10 @@ const AppLayout: React.FC<{
     }
 
     return (
-        <div className="flex h-full">
+        <div className="flex h-full md:bg-bg-primary dark:md:bg-bg-primary">
             {isMerchant ? <MerchantSideNav /> : <SideNav user={user} isPremiumUser={isPremiumUser} />}
-            <div className="flex-1 flex flex-col min-w-0">
-                <main className="flex-grow">
+            <div className="flex-1 flex flex-col min-w-0 md:m-4 md:rounded-2xl md:overflow-hidden md:bg-bg-primary md:shadow-xl md:border md:border-border-primary transition-all duration-300">
+                <main className="flex-grow overflow-y-auto">
                     <Suspense fallback={<div className="p-8 text-center">Loading...</div>}>
                         <Outlet />
                     </Suspense>
@@ -113,6 +118,7 @@ const AppContent: React.FC = () => {
     const [isPremium, setIsPremium] = useState(false);
     const [ads, setAds] = useState<MerchantAd[]>(mockAds);
     const [orders, setOrders] = useState<Order[]>(mockOrders);
+    const [transactions, setTransactions] = useState<Transaction[]>(mockTransactions);
 
     // --- DATA PERSISTENCE HOOKS ---
 
@@ -128,6 +134,7 @@ const AppContent: React.FC = () => {
                 setGoals(savedData.goals || []);
                 setPurchaseRequests(savedData.purchaseRequests || mockPurchaseRequests);
                 setOrders(savedData.orders || mockOrders);
+                setTransactions(savedData.transactions || mockTransactions);
             } else {
                 // New user or no saved data, reset to defaults
                 setBudget(mockBudget);
@@ -135,6 +142,7 @@ const AppContent: React.FC = () => {
                 setGoals([]);
                 setPurchaseRequests(mockPurchaseRequests);
                 setOrders(mockOrders);
+                setTransactions(mockTransactions);
             }
         } else {
             // No user, clear all data
@@ -143,31 +151,49 @@ const AppContent: React.FC = () => {
             setGoals([]);
             setPurchaseRequests(mockPurchaseRequests);
             setOrders(mockOrders);
+            setTransactions(mockTransactions);
         }
     }, [user]);
 
     // Save user data whenever it changes
     useEffect(() => {
-        if (user && onboardingComplete) { // Only save if logged in and past onboarding
+        if (user && onboardingComplete && !user.isGuest) { // Skip saving for Guest mode
             const dataKey = `ventyUserData_${user.id}`;
             const dataToSave = {
                 budget,
                 fixedExpenses,
                 goals,
                 purchaseRequests,
-                orders
+                orders,
+                transactions
             };
             localStorage.setItem(dataKey, JSON.stringify(dataToSave));
         }
-    }, [user, budget, fixedExpenses, goals, purchaseRequests, orders, onboardingComplete]);
+    }, [user, budget, fixedExpenses, goals, purchaseRequests, orders, transactions, onboardingComplete]);
 
 
     const handleLogin = useCallback((onboardingData: Partial<User>) => {
-        const fullUser: User = { ...mockUser, ...onboardingData, isGuest: false };
+        const isGuest = !!onboardingData.isGuest;
+        const guestId = `guest_${Math.random().toString(36).slice(2, 10)}`;
+        const baseUser = isGuest
+            ? {
+                ...mockUser,
+                id: guestId,
+                name: 'Guest',
+                email: 'guest@example.com',
+                salary: 0,
+                familyMembers: 1,
+                contactInfo: { phone: '', address: '', preferredMeetup: '' },
+                isGuest: true,
+                accountType: 'regular',
+                accountPlan: 'single',
+              }
+            : mockUser;
+        const fullUser: User = { ...baseUser, ...onboardingData, isGuest, accountType: onboardingData.accountType || baseUser.accountType } as User;
         setUser(fullUser);
         localStorage.setItem('ventyUser', JSON.stringify(fullUser));
-        localStorage.setItem('onboardingComplete', 'false');
-        setOnboardingComplete(false);
+        localStorage.setItem('onboardingComplete', isGuest ? 'true' : 'false');
+        setOnboardingComplete(isGuest ? true : false);
     }, []);
     
     const handleOnboardingFinish = useCallback((data: { fixedExpenses: FixedExpense[], newBudget: BudgetCategory[], goals: Goal[], salary?: number }) => {
@@ -191,8 +217,10 @@ const AppContent: React.FC = () => {
 
         localStorage.setItem('onboardingComplete', 'true');
         setOnboardingComplete(true);
-        showToast("AI Assistant setup complete. Your personal financial dashboard is now ready.");
-        navigate('/dashboard');
+        Promise.resolve().then(() => {
+            showToast("AI Assistant setup complete. Your personal financial dashboard is now ready.");
+            navigate('/dashboard');
+        });
     }, [user, navigate, showToast]);
 
 
@@ -211,8 +239,10 @@ const AppContent: React.FC = () => {
             document.documentElement.setAttribute('data-account-type', newUser.accountType);
             localStorage.setItem('ventyUser', JSON.stringify(newUser));
             
-            showToast(`Switched to ${isSwitchingToMerchant ? 'Merchant' : 'Regular'} mode`);
-            navigate(isSwitchingToMerchant ? '/merchant/dashboard' : '/dashboard');
+            Promise.resolve().then(() => {
+                showToast(`Switched to ${isSwitchingToMerchant ? 'Merchant' : 'Regular'} mode`);
+                navigate(isSwitchingToMerchant ? '/merchant/dashboard' : '/dashboard');
+            });
 
             return newUser;
         });
@@ -244,7 +274,9 @@ const AppContent: React.FC = () => {
             navigate('/marketing', { state: { fromPayment: true } });
             return;
         }
-        navigate(user?.accountType === 'merchant' ? '/merchant/dashboard' : '/dashboard');
+        Promise.resolve().then(() => {
+            navigate(user?.accountType === 'merchant' ? '/merchant/dashboard' : '/dashboard');
+        });
     }, [user, navigate, showToast]);
 
     const handleReviewRequest = useCallback((requestId: string, decision: 'approved' | 'rejected') => {
@@ -273,8 +305,10 @@ const AppContent: React.FC = () => {
             createdAt: new Date().toISOString(),
         };
         setPurchaseRequests(prev => [newRequest, ...prev]);
-        showToast("Your purchase request has been sent to the family head for review.");
-        navigate('/family');
+        Promise.resolve().then(() => {
+            showToast("Your purchase request has been sent to the family head for review.");
+            navigate('/family');
+        });
     }, [user, navigate, showToast]);
 
     const handleCancelOrder = useCallback((orderId: string) => {
@@ -300,10 +334,13 @@ const AppContent: React.FC = () => {
                 <Routes>
                     <Route path="/" element={<AppLayout user={user} isPremiumUser={isPremium} budget={budget} />}>
                         <Route index element={<Navigate to={user.accountType === 'merchant' ? '/merchant/dashboard' : '/dashboard'} replace />} />
-                        <Route path="dashboard" element={<DashboardScreen user={user} isPremiumUser={isPremium} transactions={mockTransactions} budget={budget} fixedExpenses={fixedExpenses} />} />
-                        <Route path="budget" element={<BudgetScreen user={user} initialBudget={budget} setGlobalBudget={setBudget} fixedExpenses={fixedExpenses} totalIncomeForBudget={user.salary - fixedExpenses.reduce((sum, e) => sum + e.amount, 0)} />} />
-                        <Route path="financial-snapshot" element={<FinancialSnapshotScreen user={user} budget={budget} fixedExpenses={fixedExpenses} transactions={mockTransactions} goals={goals} />} />
+                        <Route path="dashboard" element={<DashboardScreen user={user} isPremiumUser={isPremium} transactions={transactions} budget={budget} fixedExpenses={fixedExpenses} />} />
+                        
+                        <Route path="budget" element={<BudgetScreen user={user} initialBudget={budget} setGlobalBudget={setBudget} fixedExpenses={fixedExpenses} totalIncomeForBudget={user ? user.salary - fixedExpenses.reduce((sum, exp) => sum + exp.amount, 0) : 0} goals={goals} />} />
+                        
+                        <Route path="financial-snapshot" element={<FinancialSnapshotScreen user={user} budget={budget} fixedExpenses={fixedExpenses} transactions={transactions} goals={goals} />} />
                         <Route path="goals" element={<GoalsScreen user={user} isPremium={isPremium} onUpgrade={() => navigate('/payment', { state: { for: 'premium_subscription', amount: 22, description: 'Venty Premium Subscription' } })} goals={goals} setGoals={setGoals} />} />
+                        <Route path="goals/invest" element={<InvestmentScreen user={user} isPremiumUser={isPremium} />} />
                         <Route path="market" element={<MarketplaceScreen user={user} ads={ads} />} />
                         <Route path="product/:productId" element={<ProductDetailScreen user={user} />} />
                         <Route path="cart" element={<CartScreen user={user} onCheckout={() => navigate('/payment')} />} />
@@ -320,6 +357,8 @@ const AppContent: React.FC = () => {
                         <Route path="more" element={<MoreScreen user={user} />} />
                         <Route path="my-orders" element={<MyOrdersScreen user={user} orders={orders} onCancelOrder={handleCancelOrder} />} />
                         <Route path="payment-methods" element={<PaymentMethodsScreen user={user} />} />
+                        <Route path="referral" element={<ReferralScreen user={user} />} />
+                        <Route path="support" element={<SupportScreen user={user} />} />
 
                         <Route path="merchant" element={<MerchantLayout user={user} />}>
                             <Route path="dashboard" element={<MerchantDashboardScreen user={user} />} />
@@ -349,23 +388,25 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
     return (
         <ThemeProvider>
-            <ToastProvider>
-                <PerformanceProvider>
-                    <LocalizationProvider>
-                        <CartProvider>
-                            <FavouritesProvider>
-                                <ErrorBoundary>
-                                    <HashRouter>
-                                        <AppContent />
-                                    </HashRouter>
-                                </ErrorBoundary>
-                                <CookieBanner />
-                                <Toast />
-                            </FavouritesProvider>
-                        </CartProvider>
-                    </LocalizationProvider>
-                </PerformanceProvider>
-            </ToastProvider>
+            <AuthProvider>
+                <ToastProvider>
+                    <PerformanceProvider>
+                        <LocalizationProvider>
+                            <CartProvider>
+                                <FavouritesProvider>
+                                    <ErrorBoundary>
+                                        <HashRouter>
+                                            <AppContent />
+                                        </HashRouter>
+                                    </ErrorBoundary>
+                                    <CookieBanner />
+                                    <Toast />
+                                </FavouritesProvider>
+                            </CartProvider>
+                        </LocalizationProvider>
+                    </PerformanceProvider>
+                </ToastProvider>
+            </AuthProvider>
         </ThemeProvider>
     );
 };
